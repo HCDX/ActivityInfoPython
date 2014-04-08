@@ -2,12 +2,11 @@ from distutils.core import setup
 
 setup(
     name='activityinfo_python',
-    version='0.1',
-    packages=[''],
-    install_requires=["requests"],
-    url='',
-    license='',
-    author='jcranwellward',
+    version='1.0',
+    author='James Cranwell-Ward',
     author_email='jcranwellward@unicef.org',
+    py_modules=['activtyinfo_client'],
+    install_requires=['requests'],
     description='Simple python wrapper for ActivityInfo REST API'
 )
+
