@@ -69,12 +69,17 @@ class ActivityInfoClient(object):
     def get_database(self, db_id):
         return self.make_request('database/{}/schema'.format(db_id)).json()
 
-    def get_sites(self, partner=None, activity=None, indicator=None):
+    def get_sites(self,
+                  partner=None,
+                  activity=None,
+                  indicator=None,
+                  attribute=None):
         return self.make_request(
             'sites',
             partner=partner,
             activity=activity,
             indicator=indicator,
+            attribute=attribute,
         ).json()
 
 
