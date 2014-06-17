@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 
 import os, argparse
 from urlparse import urljoin
+from ConfigParser import SafeConfigParser
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -68,21 +69,22 @@ class ActivityInfoClient(object):
     def get_database(self, db_id):
         return self.make_request('database/{}/schema'.format(db_id)).json()
 
-    def get_sites(self, activity=None, indicator=None):
-        sites = self.make_request('sites', activity=activity if activity else None).json()
-        if indicator:
-            sites = [
-                site for site in sites
-                if 'indicatorValues' in site.keys() and
-                   str(indicator) in site['indicatorValues'].keys()]
-        return sites
+    def get_sites(self, partner=None, activity=None, indicator=None):
+        return self.make_request(
+            'sites',
+            partner=partner,
+            activity=activity,
+            indicator=indicator,
+        ).json()
 
 
 def main():
     """
-
+    Main method for command line usage
     """
-    parser = argparse.ArgumentParser(description='ActivityInfo API Python Client')
+    parser = argparse.ArgumentParser(
+        description='ActivityInfo API Python Client'
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-d', '--database',
                        type=int,
@@ -90,15 +92,19 @@ def main():
     group.add_argument('-a', '--activity',
                        type=int,
                        help='Filter results by activty')
+    parser.add_argument('-p', '--partner',
+                        type=int,
+                        default=None,
+                        help='Filter results by partner')
     parser.add_argument('-i', '--indicator',
                         type=int,
                         default=None,
                         help='Filter results by indicator')
-    parser.add_argument('-u', '--username',
+    parser.add_argument('-U', '--username',
                         type=str,
                         default='',
                         help='Optional username for authentication')
-    parser.add_argument('-p', '--password',
+    parser.add_argument('-P', '--password',
                         type=str,
                         default='',
                         help='Optional password for authentication')
@@ -106,14 +112,20 @@ def main():
     args = parser.parse_args()
 
     try:
+        parser = SafeConfigParser()
+        parser.read('settings.ini')
+        username = parser.get('auth', 'user')
+        password = parser.get('auth', 'pass')
         client = ActivityInfoClient(
-            username=args.username,
-            password=args.password,
+            username=username or args.username,
+            password=password or args.password,
         )
         if args.database:
             response = client.get_database(args.database)
         elif args.activity:
-            response = client.get_sites(args.activity, args.indicator)
+            response = client.get_sites(args.partner,
+                                        args.activity,
+                                        args.indicator)
         else:
             response = client.get_sites()
 
