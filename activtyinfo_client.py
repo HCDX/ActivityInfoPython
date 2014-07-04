@@ -95,7 +95,7 @@ class ActivityInfoClient(object):
                   attribute=None,
                   include_monthly_reports=True):
         sites = self.make_request(
-            'sites',
+            'resources/sites',
             partner=partner,
             activity=activity,
             indicator=indicator,
@@ -105,7 +105,7 @@ class ActivityInfoClient(object):
         if include_monthly_reports:
             sites_with_reports = []
             for site in sites:
-                site['monthlyReports'] = self.get_monthly_reports_for_site(site['id']).json()
+                site['monthlyReports'] = self.get_monthly_reports_for_site(site['id'])
                 sites_with_reports.append(site)
             sites = sites_with_reports
 
