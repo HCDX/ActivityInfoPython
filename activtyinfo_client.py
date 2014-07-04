@@ -107,6 +107,7 @@ class ActivityInfoClient(object):
             for site in sites:
                 site['monthlyReports'] = self.get_monthly_reports_for_site(site['id'])
                 sites_with_reports.append(site)
+            sites = sites_with_reports
 
         return sites
 
