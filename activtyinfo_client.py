@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+# coding=utf-8
 __author__ = 'jcranwellward'
 
-import os, argparse
+import json
+import os
+import argparse
 from urlparse import urljoin
 from ConfigParser import SafeConfigParser
 
@@ -16,6 +19,7 @@ class ActivityInfoClient(object):
         Retrieve the structure of database id 504: /database/504/schema
         Retrieve all sites in activity 33: /sites?activity=33
         Retrieve all sites in activity 33 in GeoJSON format: /sites/points?activity=33
+
         List all administrative levels in Lebanon (country code LB): /country/LB/adminLevels
         List all administrative entities in level 1370: /adminLevel/1370/entities
         List all administrative entities in level 1370 in GeoJSON format: /adminLevel/1370/entities/features
@@ -27,7 +31,7 @@ class ActivityInfoClient(object):
     def __init__(self,
                  username=None,
                  password=None,
-                 base_url='https://www.activityinfo.org/resources/'):
+                 base_url='https://www.activityinfo.org/'):
         self.base_url = base_url
         if username and password:
             self.auth = HTTPBasicAuth(username, password)
@@ -47,40 +51,79 @@ class ActivityInfoClient(object):
         if path is None:
             return self.base_url
         return urljoin(
-            self.base_url,
-            '{}{}'.format(
-                os.path.normpath(path), '/'
-            )
+            self.base_url, os.path.normpath(path),
         )
 
     def make_request(self, path, **params):
 
-        full_path = self.build_path(path)
         response = requests.get(
-            full_path,
+            self.build_path(path),
             params=params,
-            auth=getattr(self, 'auth', ())
+            auth=getattr(self, 'auth', ()),
+        )
+        return response
+
+    def call_command(self, type, **properties):
+
+        payload = json.dumps(
+            {
+                'type': type,
+                'command': {
+                    'properties': properties
+                }
+            }
+        )
+
+        response = requests.post(
+            self.build_path('command'),
+            headers={'content-type': 'application/json'},
+            auth=getattr(self, 'auth', ()),
+            data=payload,
         )
         return response
 
     def get_databases(self):
-        return self.make_request('databases').json()
+        return self.make_request('resources/databases').json()
 
     def get_database(self, db_id):
-        return self.make_request('database/{}/schema'.format(db_id)).json()
+        return self.make_request('resources/database/{}/schema'.format(db_id)).json()
 
     def get_sites(self,
                   partner=None,
                   activity=None,
                   indicator=None,
-                  attribute=None):
-        return self.make_request(
+                  attribute=None,
+                  include_monthly_reports=True):
+        sites = self.make_request(
             'sites',
             partner=partner,
             activity=activity,
             indicator=indicator,
             attribute=attribute,
         ).json()
+
+        if include_monthly_reports:
+            sites_with_reports = []
+            for site in sites:
+                site['monthlyReports'] = self.get_monthly_reports_for_site(site['id'])
+                sites_with_reports.append(site)
+
+        return sites
+
+    def get_monthly_reports_for_site(self, site_id):
+        return self.make_request('resources/sites/{}/monthlyReports'.format(site_id)).json()
+
+    def get_admin_levels(self, country):
+        return self.make_request('resources/country/{}/adminLevels'.format(country)).json()
+
+    def get_location_types(self, country):
+        return self.make_request('resources/country/{}/locationTypes'.format(country)).json()
+
+    def get_entities(self, level_id):
+        return self.make_request('resources/adminLevel/{}/entities'.format(level_id)).json()
+
+    def get_locations(self, type_id):
+        return self.make_request('resources/locations', type=type_id).json()
 
 
 def main():
