@@ -88,28 +88,25 @@ class ActivityInfoClient(object):
     def get_database(self, db_id):
         return self.make_request('resources/database/{}/schema'.format(db_id)).json()
 
-    def get_sites(self,
-                  partner=None,
-                  activity=None,
-                  indicator=None,
-                  attribute=None,
-                  include_monthly_reports=True):
+    def get_sites(self, database=None, partner=None, activity=None, indicator=None, attribute=None):
         sites = self.make_request(
             'resources/sites',
+            database=database,
             partner=partner,
             activity=activity,
             indicator=indicator,
-            attribute=attribute,
-        ).json()
-
-        if include_monthly_reports:
-            sites_with_reports = []
-            for site in sites:
-                site['monthlyReports'] = self.get_monthly_reports_for_site(site['id'])
-                sites_with_reports.append(site)
-            sites = sites_with_reports
-
+            attribute=attribute).json()
         return sites
+
+    def get_cube(self, form_ids):
+        return self.make_request(
+            'resources/sites/cube?'
+            'dimension=indicator'
+            '&dimension=site'
+            '&dimension=month'
+            '&form={}'.format(
+                '&form='.join([str(id) for id in form_ids])
+            )).json()
 
     def get_monthly_reports_for_site(self, site_id):
         return self.make_request('resources/sites/{}/monthlyReports'.format(site_id)).json()
