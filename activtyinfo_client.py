@@ -98,13 +98,15 @@ class ActivityInfoClient(object):
             attribute=attribute).json()
         return sites
 
-    def get_cube(self, form_ids):
+    def get_cube(self, form_ids, month=None):
         return self.make_request(
             'resources/sites/cube?'
             'dimension=indicator'
             '&dimension=site'
             '&dimension=month'
+            '{}'
             '&form={}'.format(
+                '&month='+month if month is not None else '',
                 '&form='.join([str(id) for id in form_ids])
             )).json()
 
