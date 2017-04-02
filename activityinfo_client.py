@@ -20,11 +20,12 @@ class ActivityInfoClient(object):
         Retrieve all sites in activity 33: /sites?activity=33
         Retrieve all sites in activity 33 in GeoJSON format: /sites/points?activity=33
 
+        List all countries: /countries
         List all administrative levels in Lebanon (country code LB): /country/LB/adminLevels
         List all administrative entities in level 1370: /adminLevel/1370/entities
         List all administrative entities in level 1370 in GeoJSON format: /adminLevel/1370/entities/features
         List all location types in Lebanon: /country/LB/locationTypes
-        List all locations of type 1370: /locations/type=1370
+        List all locations of type 1370: /locations?type=1370
 
     """
 
@@ -112,6 +113,9 @@ class ActivityInfoClient(object):
 
     def get_monthly_reports_for_site(self, site_id):
         return self.make_request('resources/sites/{}/monthlyReports'.format(site_id)).json()
+
+    def get_countries(self):
+        return self.make_request('resources/countries').json()
 
     def get_admin_levels(self, country):
         return self.make_request('resources/country/{}/adminLevels'.format(country)).json()
